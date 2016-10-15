@@ -1,0 +1,9 @@
+---
+- name: Install Pip
+  easy_install: name=pip state=latest
+
+- name: Install Docker Python Library
+  pip: name=docker-py executable=/usr/local/bin/pip
+
+- name: Install Docker Python Library
+  pip: name=python-consul executable=/usr/local/bin/pip

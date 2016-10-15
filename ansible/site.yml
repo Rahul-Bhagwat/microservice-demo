@@ -1,0 +1,17 @@
+---
+
+- hosts: all
+  become: yes
+  become_user: root
+  roles:
+    - role: angstwad.docker_ubuntu
+      tags: docker_role
+    - role: docker_py
+      tags: docker_py_role
+
+- hosts: site_hosts
+  become: yes
+  become_user: root
+  roles:
+    - role: site
+      tags: site_role

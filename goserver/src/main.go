@@ -86,13 +86,14 @@ func main() {
 	//	p := ginprometheus.NewPrometheus("gin")
 	//	p.Use(r)
 
-	r.GET("/get_lolcat", getLolCats)
+	r.POST("/lolcat", lolCats)
 
 	// Listen and server on 0.0.0.0:8080
 	r.Run(*bindAddress)
 }
 
-func getLolCats(c *gin.Context) {
+func lolCats(c *gin.Context) {
+	fmt.Printf("lolcat\n")
 	getURL := fmt.Sprintf("http://%s/random_lolcat", *lolCatAddress) //s.dropletID , can we just give a bogus value?
 
 	//log.KV("URL", getURL).Debug("Downloading lolcats")
@@ -123,9 +124,10 @@ func getLolCats(c *gin.Context) {
 		//return "", err
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"lolcat_url": body,
-	})
+	user := "unknown" //TODO Add auth
+
+	addMessageToDb(user, fmt.Sprintf("<img src=\"%s\"/>", string(body)))
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func allMessages(c *gin.Context) {
@@ -156,29 +158,32 @@ func createMessage(c *gin.Context) {
 	//	user := c.PostForm("user")
 	user := "unknown" //TODO Add auth
 	data := c.PostForm("data")
-	stmt, err := db.Prepare("insert into messages (user, data) values(?,?);")
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-	_, err = stmt.Exec(user, data)
 
-	if err != nil {
-		fmt.Print(err.Error())
-	}
+	addMessageToDb(user, data)
 
 	// Fastest way to append strings
 	buffer.WriteString(user)
 	buffer.WriteString(" ")
 	buffer.WriteString(data)
-	defer stmt.Close()
-	name := buffer.String()
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf(" %s successfully created", name),
+		"message": "successfully created",
 	})
 }
+func addMessageToDb(user, data string) {
+	stmt, err := db.Prepare("insert into messages (user, data) values(?,?);")
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	defer stmt.Close()
 
+	_, err = stmt.Exec(user, data)
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+}
 func migrate(db *sql.DB) {
-	stmt, err := db.Prepare("CREATE TABLE messages (id int NOT NULL AUTO_INCREMENT, user varchar(40), data varchar(40), PRIMARY KEY (id));")
+	stmt, err := db.Prepare("CREATE TABLE messages (id int NOT NULL AUTO_INCREMENT, user varchar(40), data text, PRIMARY KEY (id));")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

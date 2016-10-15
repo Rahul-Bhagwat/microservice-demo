@@ -1,0 +1,2 @@
+[site_hosts]
+104.131.26.77 ansible_user=root

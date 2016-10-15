@@ -12,7 +12,7 @@
 <body>
 
 
-<script src="js/jquery.min.js"></script>
+<script src="js/jquery.js"></script>
 <script src="bootstrap/js/bootstrap.min.js"></script>
 
 
@@ -27,12 +27,44 @@ Posts :
 Add a Post :
 <form> 
 
-<input type="textarea" id="message"/>
-<input type="button" id="btnmessage" text="Submit Message"/>
-<input type="button" id="btnlolcat" text="Add LolCat"/>
+<input type="textarea" id="txt_name"  rows="4" cols="50" />
+<input type="button" id="btnmessage" value="Submit Message"  onclick="addMessage()"/>
+<input type="button" id="btnlolcat" value="Add LolCat" onclick="addLolCat()"/>
 
 </form>
 
+
+<script>
+
+function refreshPage() {
+var div = $("#posts")
+div.empty()
+var ul = $('<ul>').appendTo(div);
+
+ $.getJSON("/messages", function(result){
+    $.each(result.result, function(i, item){
+
+	    ul.append(
+	        $(document.createElement('li')).html(item.Data)
+	    );
+	});
+  });
+}
+
+
+function addLolCat() {
+	$.post( "/lolcat");
+	refreshPage();
+}
+function addMessage() {
+	$.post( "/message", { data: $('#txt_name').val() } );
+	refreshPage();
+}
+
+$( document ).ready(function() {
+	refreshPage();
+});
+</script>
 
 </body>
 </html>

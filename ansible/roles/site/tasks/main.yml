@@ -1,0 +1,60 @@
+---
+
+- name: Site Container Deploy
+  docker_container:
+    api_version: "1.20"
+    name: site
+    pull: true
+    image: "mcampbelll/microservice-demo:{{ site_tag }}"
+    state: started
+    volumes:
+      - /dev/log:/dev/log
+    ports:
+      - "80:8080"
+    log_options:
+      max-size: "10m"
+      max-file: "5"
+    env:
+      LOLCAT_ADDR: "127.0.0.1:8081"
+
+- name: lolcats Container Deploy
+  docker_container:
+    api_version: "1.20"
+    name: site
+    pull: true
+    image: "mcampbelll/lolcats:{{ lol_tag }}"
+    state: started
+    volumes:
+      - /dev/log:/dev/log
+    ports:
+      - "8081:8081"
+    log_options:
+      max-size: "10m"
+      max-file: "5"
+
+
+- name: mysql
+  docker_container:
+    api_version: "1.20"
+    name: site
+    pull: true
+    image: mysql:5.5
+    state: started
+    volumes:
+      - /dev/log:/dev/log
+    ports:
+      - "8081:8081"
+    log_options:
+      max-size: "10m"
+      max-file: "5"
+    env:
+      MYSQL_DATABASE: microservice
+      MYSQL_ROOT_PASSWORD: ""
+
+# - name: Register Ingestor Internal port with Consul
+#   consul:
+#     service_port: 8001
+#     service_name: "{{ ingestor_consul_name }}-internal"
+#     http: http://localhost:8001/debug/_do/health
+#     interval: 10s
+#     timeout: 2s
