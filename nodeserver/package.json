@@ -1,0 +1,4 @@
+{ "name" : "lolcats"
+, "dependencies" : { "httpdispatcher": "1.0.0" }
+, "config" : { "port" : "8081" }
+, "scripts" : { "start" : "node lolcats.js" } }

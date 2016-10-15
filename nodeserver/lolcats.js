@@ -19,16 +19,16 @@ function handleRequest(request, response){
 }
 
 
-var lolcats = [ "asfd",
-"bob",
-"sue"
+var lolcats = [ "https://cutecatshq.com/wp-content/uploads/2016/03/This-beauty-is-strolling-around-my-local-cat-cafe.jpg",
+"http://farm5.static.flickr.com/4138/4746437053_3c373a33ca.jpg",
+"https://bw-2e2c4bf7ceaa4712a72dd5ee136dc9a8-bwcore.s3.amazonaws.com/articles/full_14229.jpg"
 ]
 
 //A sample GET request    
 dispatcher.onGet("/random_lolcat", function(req, res) {
     res.writeHead(200, {'Content-Type': 'text/plain'});
-    //TODO: random num length lolcats
-    res.end(lolcats[1]);
+    var id = Math.floor((Math.random() * lolcats.length));
+    res.end(lolcats[id]);
 });    
 
 //Create a server
