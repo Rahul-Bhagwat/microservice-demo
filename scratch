@@ -1,0 +1,121 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/microservice")
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	defer db.Close()
+	// make sure connection is available
+	err = db.Ping()
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	migrate(db)
+
+	type Person struct {
+		Id         int
+		First_Name string
+		Last_Name  string
+	}
+	router := gin.Default()
+
+	router.GET("/user/:id", getUser)
+	router.GET("/users", allUsers)
+	router.POST("/person", createPerson)
+
+	// Add API handlers here
+	router.Run(":3000")
+}
+
+func getUser(c *gin.Context) {
+	var (
+		person Person
+		result gin.H
+	)
+	id := c.Param("id")
+	row := db.QueryRow("select id, first_name, last_name from user where id = ?;", id)
+	err = row.Scan(&person.Id, &person.First_Name, &person.Last_Name)
+	if err != nil {
+		// If no results send null
+		result = gin.H{
+			"result": nil,
+			"count":  0,
+		}
+	} else {
+		result = gin.H{
+			"result": person,
+			"count":  1,
+		}
+	}
+	c.JSON(http.StatusOK, result)
+
+}
+
+func allUsers(c *gin.Context) {
+	var (
+		person  Person
+		persons []Person
+	)
+	rows, err := db.Query("select id, first_name, last_name from person;")
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	for rows.Next() {
+		err = rows.Scan(&person.Id, &person.First_Name, &person.Last_Name)
+		persons = append(persons, person)
+		if err != nil {
+			fmt.Print(err.Error())
+		}
+	}
+	defer rows.Close()
+	c.JSON(http.StatusOK, gin.H{
+		"result": persons,
+		"count":  len(persons),
+	})
+}
+
+func createPerson() {
+	var buffer bytes.Buffer
+	first_name := c.PostForm("first_name")
+	last_name := c.PostForm("last_name")
+	stmt, err := db.Prepare("insert into person (first_name, last_name) values(?,?);")
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	_, err = stmt.Exec(first_name, last_name)
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	// Fastest way to append strings
+	buffer.WriteString(first_name)
+	buffer.WriteString(" ")
+	buffer.WriteString(last_name)
+	defer stmt.Close()
+	name := buffer.String()
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf(" %s successfully created", name),
+	})
+}
+
+func migrate(db sql.Db) {
+	stmt, err := db.Prepare("CREATE TABLE user (id int NOT NULL AUTO_INCREMENT, first_name varchar(40), last_name varchar(40), PRIMARY KEY (id));")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Person Table successfully migrated....")
+	}
+}
